@@ -1,6 +1,3 @@
-from shlex import split
-
-
 class Vec2:
 	x: int
 	y: int
@@ -87,7 +84,7 @@ class Grid:
 		self.content[position.y][position.x] = value
 
 	def has(self, position: Vec2):
-		return (0 <= position.x < self.width and
+		return (0 <= position.x < len(self.content[position.y]) and
 				0 <= position.y < self.height)
 
 	def near_edge(self, position: Vec2, dist = 0):
@@ -113,7 +110,7 @@ class Grid:
 	def from_text(text, content_format=FORMAT_NUMBERS):
 		lines = text.split("\n")
 
-		grid = Grid(len(lines[0]), len(lines))
+		grid = Grid(0, 0)
 		grid.content.clear()
 
 		for line in lines:
@@ -122,8 +119,26 @@ class Grid:
 					line = [int(val) for val in line]
 				case Grid.FORMAT_CHARS:
 					line = list(line)
+			grid.width = max(grid.width, len(line))
+			grid.height += 1
 			grid.content.append(line)
+
+		for line in grid.content:
+			padding_amount = grid.width - len(line)
+
+			match content_format:
+				case Grid.FORMAT_NUMBERS:
+					line += [0] * padding_amount
+				case Grid.FORMAT_CHARS:
+					line += [" "] * padding_amount
 		return grid
+
+	def copy(self) -> Grid:
+		new_grid = Grid(self.width, self.height)
+		new_grid.content.clear()
+		for line in self.content:
+			new_grid.content.append(line.copy())
+		return new_grid
 
 def get_columns(lines: list[str], seperator) -> list[list[int]]:
 	num_cols = len(lines[0].split(seperator))
